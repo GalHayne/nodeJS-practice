@@ -2,6 +2,8 @@ const axios = require('axios');
 const fs = require('fs');
 const request = require('request');
 
+const TOP_COUNTRIES_NUMBER = 10
+
 downloadCountryFlags()
     .then((data) => {
         return new Promise((resolve, reject) => {
@@ -17,24 +19,27 @@ downloadCountryFlags()
         })
     })
     .then(() => {
-        writeFromFile('./files/country.json')
+        readFromFile('./files/country.json')
             .then((data) => {
-                let topFiveCountry = getCountries(data);
-                downloadFlags(topFiveCountry);
+                const sortCountries = getSortCountries(data);
+                let getTopCountry = getTopCountries(sortCountries, TOP_COUNTRIES_NUMBER);
+                downloadFlags(getTopCountry);
             })
 
     })
+
+function getSortCountries(countries) {
+    return countries.sort((p1, p2) => (p1.population < p2.population) ? 1 : (p1.population > p2.population) ? -1 : 0);
+}
 
 
 function downloadCountryFlags() {
     return getJSONfromUrl('https://restcountries.com/v2/all')
 }
 
-function getCountries(countries) {
-    let sortedCountry = countries.sort((p1, p2) => (p1.population < p2.population) ? 1 : (p1.population > p2.population) ? -1 : 0);
-    let topFiveCountry = [];
-    topFiveCountry = sortedCountry.slice(0, 5);
-    return topFiveCountry;
+function getTopCountries(countries, number) {
+    topCountry = countries.slice(0, number);
+    return topCountry;
 }
 
 function downloadFlags(countries) {
@@ -71,7 +76,7 @@ function getJSONfromUrl(url) {
 
 
 
-function writeFromFile(fileName) {
+function readFromFile(fileName) {
     return new Promise((resolve, reject) => {
         fs.readFile(fileName, 'utf8', (err, file) => {
             if (err) {
